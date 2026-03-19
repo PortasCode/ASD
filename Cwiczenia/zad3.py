@@ -11,6 +11,10 @@ k-ty co do wielkosci w O(n)
 jest duzo pojemnikow o roznych ksztaltach, wszystkie pojemniki sa polaczone rurami oraz kazdy pojemnik ma jakies wspolrzedne na osi OY
 dzieki temu wiemy na jakesj sa okolo wysokosci
 nalewamy k litrow wody i interesuje nas ile pojemniokow bedzie w pelni napelnionych
+
+4) Posortuj A[n] malejąco,
+log(n) unikalnych wartosci
+w zlozonosci O(nlog(logn))git pu
 """
 
 
