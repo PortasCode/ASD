@@ -14,7 +14,14 @@ nalewamy k litrow wody i interesuje nas ile pojemniokow bedzie w pelni napelnion
 
 4) Posortuj A[n] malejąco,
 log(n) unikalnych wartosci
-w zlozonosci O(nlog(logn))git pu
+w zlozonosci O(nlog(logn))
+
+5) Czy A[n] i B[n] to anagramy ?
+a) alfabet łaciński
+b) uni code
+
+6) Posortuj n slow
+w czasie liniowym, wzgl sumy ich dlugosci
 """
 
 
@@ -53,6 +60,7 @@ def find_k_ty(A, p, r, k):
             return find_k_ty(A, p, q - 1, k)
     return
 
+
 # 3)
 # Metoda 1
 # nie interesuje nas wysokosc teg wszystkiego
@@ -61,3 +69,39 @@ def find_k_ty(A, p, r, k):
 
 # Metoda 2
 # binsearch, sprawdzamy ile wody jest potrzebne aby do tego poziomu ktory znalezlismy 
+
+# 4)
+# a)
+def zadanie_4a(A, B, k):
+    N = [0] * k
+    n = len(A)
+
+    if len(A) != len(B):
+        return False
+
+    for i in range(n):
+        N[ord(A[i]) - 65] += 1
+        N[ord(B[i]) - 65] -= 1
+
+    for element in N:
+        if element != 0:
+            return False
+    return True
+
+
+# b)
+def zadanie_4b(A, B, T):
+    n = len(A)
+
+    for i in range(n):
+        T[A[i]] = 0
+        T[B[i]] = 0
+
+    for i in range(n):
+        T[A[i]] += 1
+        T[B[i]] -= 1
+
+    for i in range(n):
+        if T[A[i]] or T[B[i]]:
+            return False
+    return True
