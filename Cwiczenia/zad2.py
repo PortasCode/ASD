@@ -12,22 +12,7 @@ j nalezy {i-k, i+k}
 4) Posortowana tablica A[n]
 i liczba x. Znajdź i,j takie ze
 a) A[i] - A[j] = x
-b) A[i] = A[j] = x
-
-# te dwa zadania 5,6 to sa bardziej jako ciekawostki
-# raczej trzeba sie skupic na zrobieniu zadania 2 i 3 oraz po prostu robienie zadan ze szkopul
-5) struktura danych
-- wlozyc element O(logn)
-- insert
--remove Min
--remove Max
-
-6) struktura danych
-- wlozyc element O(logn)
-- insert
-- remove Median
-
----------------
+b) A[i] + A[j] = x
 
 7) Zliczyc inwersje
 i < j , A[i] > A[j]   - to jest to kiedy jest inwersja
@@ -46,7 +31,7 @@ class Node():
 
 # a)
 def scalanie(head1, head2):
-    head = Node()
+    head = Node(0)
     tail = head
 
     while head1 is not None and head2 is not None:
@@ -81,12 +66,15 @@ def roz(A):
 
 def mergesort(A):
     while True:
-        result = Node()
+        result = Node(0)
         i = result
         counter = 0
         while A is not None:
             a, A = roz(A)
-            b, A = roz(A)
+            if A is not None:
+                b, A = roz(A)
+            else:
+                b = None
             d = scalanie(a, b)
             i.next = d
 
@@ -105,6 +93,7 @@ def parent(i): return (i - 1) // 2
 
 def wstawianie_do_kopca(T, value):
     T.append(value)
+    i = len(T) - 1
 
     while i > 0 and T[parent(i)] < T[i]:
         # Zamieniamy miejscami z rodzicem
@@ -114,6 +103,59 @@ def wstawianie_do_kopca(T, value):
 
 
 # 3)
+def heapify_chaotyczne(tablica: list[int], n: int, i: int) -> None:
+    max_ind = i
+    if left(i) < n and tablica[left(i)] < tablica[max_ind]:
+        max_ind = left(i)
+    if right(i) < n and tablica[right(i)] < tablica[max_ind]:
+        max_ind = right(i)
+
+    if max_ind != i:
+        tablica[max_ind], tablica[i] = tablica[i], tablica[max_ind]
+        heapify(tablica, n, max_ind)
+
+
+def build_heap_chaotyczne(tablica: list[int]) -> None:
+    n = len(tablica)
+    for i in range(parent(n - 1), -1, -1):
+        heapify_chaotyczne(tablica, n, i)
+
+
+def sortowanie_chaotyczne(tablica: list[int]) -> list[int]:
+    n = len(tablica)
+    build_heap_chaotyczne(tablica)
+    for i in range(n - 1):
+        tablica[0], tablica[n - 1 - i] = tablica[n - 1 - i], tablica[0]
+        heapify(tablica, n - 1 - i, 0)
+    return tablica
+
+
+def tablica_k_chaotyczna(tablica: list[int], k: int) -> None:
+    n = len(tablica)
+    if n == 0: return
+
+    rozmiar_kopca = min(k+1,n)
+    kopiec = tablica[:rozmiar_kopca]
+    build_heap_chaotyczne(kopiec)
+
+    indeks = 0
+
+    for i in range(rozmiar_kopca,n):
+        tablica[indeks] = kopiec[0]
+        indeks += 1
+
+        kopiec[0] = tablica[i]
+
+        heapify_chaotyczne(kopiec,rozmiar_kopca,0)
+
+    while rozmiar_kopca > 0:
+        tablica[indeks] = kopiec[0]
+        indeks += 1
+
+        kopiec[0] = kopiec[rozmiar_kopca-1]
+        rozmiar_kopca -= 1
+        heapify_chaotyczne(kopiec,rozmiar_kopca,0)
+
 
 
 # 4)
@@ -121,13 +163,13 @@ def gasieinca_odejmowanie(T, x):
     N = len(T)
     j = 1
     i = 0
-    while i < N:
-        if T[i] - T[j] == x:
-            return j, i
-        elif T[i] - T[j] < x:
-            i += 1
-        else:
+    while j < N:
+        if T[j] - T[i] == x:
+            return i,j
+        elif T[j] - T[i] < x:
             j += 1
+        else:
+            i += 1
     return None, None
 
 
@@ -136,7 +178,7 @@ def gasienica_dodawanie(T, x):
     i = 0
     j = N - 1
 
-    while i < j:
+    while i < j :
         if T[i] + T[j] == x:
             return i, j
         elif T[i] + T[j] < x:

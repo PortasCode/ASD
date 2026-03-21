@@ -59,7 +59,6 @@ def insert(first, node):
     return first
 
 
-# napisac to samo na jednej zmiennej
 def insert_one_variable(first, node):
     if first is None:
         return node

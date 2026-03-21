@@ -71,8 +71,10 @@ def find_k_ty(A, p, r, k):
 # binsearch, sprawdzamy ile wody jest potrzebne aby do tego poziomu ktory znalezlismy 
 
 # 4)
+
+# 5)
 # a)
-def zadanie_4a(A, B, k):
+def zadanie_5a(A, B, k):
     N = [0] * k
     n = len(A)
 
@@ -90,7 +92,7 @@ def zadanie_4a(A, B, k):
 
 
 # b)
-def zadanie_4b(A, B, T):
+def zadanie_5b(A, B, T):
     n = len(A)
 
     for i in range(n):
@@ -105,3 +107,46 @@ def zadanie_4b(A, B, T):
         if T[A[i]] or T[B[i]]:
             return False
     return True
+
+
+# 6)
+def counting_sort_str(tablica: list[str], ind: int) -> list[str]:
+    n = len(tablica)
+    if n == 0:
+        return []
+
+    res = [""] * n
+
+    cnt = [0] * 128
+
+    for element in tablica:
+        p = ord(element[ind])
+        cnt[p] += 1
+
+    for i in range(1, 128):
+        cnt[i] += cnt[i - 1]
+
+    for i in range(n - 1, -1, -1):
+        p = ord(tablica[i][ind])
+        cnt[p] -= 1
+        res[cnt[p]] = tablica[i]
+
+    return res
+
+
+def sortowanie_n_slow(tablica: list[str]) -> list[str]:
+    if not tablica:
+        return []
+
+    max_len = max(len(element) for element in tablica)
+    kubelki = [[] for _ in range(max_len + 1)]
+
+    for napis in tablica:
+        kubelki[len(napis)].append(napis)
+
+    aktywne_slowa = []
+
+    for i in range(max_len - 1, -1, -1):
+        aktywne_slowa.extend(kubelki[i])
+
+        aktywne_slowa = counting_sort_str(aktywne_slowa, i)
