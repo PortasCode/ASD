@@ -1,13 +1,12 @@
 import sys
 from random import randint, seed
 
-OIOIOI = True
+OIOIOI = False
 
 
-class Slowo():
-    def __init__(self, word, indeks):
-        self.val = word
-        self.idx = indeks
+class Slowo:
+    def __init__(self, word: str):
+        self.str = word
         self.prev = 0
 
 
@@ -17,7 +16,7 @@ def merge(NT, B, p, q, r):
     wziete_lewa = 0
 
     while i < q and j < r:
-        if NT[i].val < NT[j].val:
+        if NT[i].str < NT[j].str:
             wziete_lewa += 1
             B[k] = NT[i]
             i += 1
@@ -53,10 +52,7 @@ def merge_sort(NT, B, p, r):
 def solution(T):
     n = len(T)
     B = [0] * n
-    NT = [0] * n
-
-    for i in range(n):
-        NT[i] = Slowo(T[i], i)
+    NT = [Slowo(word) for word in T]
 
     merge_sort(NT, B, 0, n)  # glowne wywolanie funkcji
 
@@ -64,9 +60,9 @@ def solution(T):
 
 
 if __name__ == "__main__":
-    def generate_random_string(length):
-        return ''.join(chr(randint(97, 122)) for _ in range(length))
 
+    def generate_random_string(length):
+        return "".join(chr(randint(97, 122)) for _ in range(length))
 
     if OIOIOI:
         n = int(sys.stdin.readline().strip())
@@ -78,7 +74,7 @@ if __name__ == "__main__":
             (10, 5, 10, 6),
             (100, 5, 10, 88),
             (100, 20, 100, 91),
-            (10000, 10, 30, 9901)
+            (10000, 10, 30, 9901),
         ]
         ok = 0
         for idx, (n, m_low, m_high, ans) in enumerate(test_def):

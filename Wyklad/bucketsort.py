@@ -8,6 +8,7 @@ def insert_sort(A:list[float]):
         A[j+1] = key
 
 
+# to jest sortowanie dla liczb z przedziału [0,1)
 def bucket_sort(A:list[float]):
     n = len(A)
     B = [x for x in A]
