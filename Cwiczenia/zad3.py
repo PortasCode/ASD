@@ -66,7 +66,6 @@ def find_k_ty(A, p, r, k):
 # nie interesuje nas wysokosc teg wszystkiego
 # do zaimplementowania w domu
 
-
 # Metoda 2
 # binsearch, sprawdzamy ile wody jest potrzebne aby do tego poziomu ktory znalezlismy
 
@@ -154,3 +153,9 @@ def sortowanie_n_slow(tablica: list[str]):
 
     for i in range(len(aktywne_slowa)):
         tablica[i] = aktywne_slowa[i]
+
+
+def main() -> None:
+
+    if __name__ == "__main__":
+        main()
