@@ -55,4 +55,4 @@ def coal_nlogn(A: list[int], T: int):
 
 
 # zmien all_tests na True zeby uruchomic wszystkie testy
-runtests(coal, all_tests=True)
+runtests(coal_nlogn, all_tests=True)
