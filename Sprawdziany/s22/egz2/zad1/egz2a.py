@@ -2,57 +2,55 @@ from egz2atesty import runtests
 import math
 
 
+class DrzewoPrzedzialMax:
+    def __init__(self, n: int, N: int, T: int):
+        self.drzewo = [0] * (2 * N)
+        self.N = N
+
+        for idx in range(1, 2 * N):
+            self.drzewo[idx] = T
+
+    def _update(self, value: int) -> int:
+        idx = 1
+
+        while idx < self.N:
+            if self.drzewo[2 * idx] >= value:
+                idx = 2 * idx
+            else:
+                idx = 2 * idx + 1
+
+        result = idx
+        self.drzewo[result] -= value
+
+        idx = (idx) // 2
+
+        while idx > 0:
+            self.drzewo[idx] = max(self.drzewo[2 * idx], self.drzewo[2 * idx + 1])
+            idx //= 2
+
+        return result - self.N
+
+
 def coal(A: list[int], T: int):
     n = len(A)
-    M = [0] * n
+    N = 1
 
-    ostatni_indeks = -1
-    for transport in A:
-        for i in range(n):
-            if M[i] + transport <= T:
-                ostatni_indeks = i
-                M[i] += transport
-                break
-    return ostatni_indeks
+    while N < n:
+        N *= 2
 
+    drzewo = DrzewoPrzedzialMax(n, N, T)
 
-class Drzewo:
-    def __init__(self, rozmiar, T):
-        potega = math.ceil(math.log2(rozmiar)) if rozmiar > 1 else 0
-        self.base = 2**potega
-        self.drzewo = [T] * (2 * self.base)
+    result = -1
+    for idx in range(n):
+        transport = A[idx]
 
-    def aktualizacja(self, wartosc):
-        v = 1
+        temp = drzewo._update(transport)
 
-        while v < self.base:
-            if self.drzewo[2 * v] >= wartosc:
-                v = 2 * v
-            else:
-                v = 2 * v + 1
+        if idx == n - 1:
+            result = temp
 
-        result = v - self.base
-        self.drzewo[v] -= wartosc
-
-        v //= 2
-
-        while v > 1:
-            self.drzewo[v] = max(self.drzewo[2 * v], self.drzewo[2 * v + 1])
-            v //= 2
-
-        return result
-
-
-def coal_nlogn(A: list[int], T: int):
-    n = len(A)
-    tree = Drzewo(n, T)
-
-    last_indeks = -1
-    for i in range(n):
-        last_indeks = tree.aktualizacja(A[i])
-
-    return last_indeks
+    return result
 
 
 # zmien all_tests na True zeby uruchomic wszystkie testy
-runtests(coal_nlogn, all_tests=True)
+runtests(coal, all_tests=True)

@@ -1,51 +1,52 @@
 from egz3btesty import runtests
 
 
-def maze(L):
+def maze(L: list[str]) -> int:
     n = len(L)
 
-    if L[0][0] == "#":
+    if L[0][0] == "#" or L[n - 1][n - 1] == "#":
         return -1
 
-    dp = [[-1 for _ in range(n)] for _ in range(n)]
+    dp = [[-float("inf") for _ in range(n)] for _ in range(n)]
+
     dp[0][0] = 0
 
-    for r in range(1, n):
-        if L[r][0] == "#":
+    for i in range(1, n):
+        if L[i][0] == ".":
+            dp[i][0] = dp[i - 1][0] + 1
+        else:
             break
-        if dp[r - 1][0] != -1:
-            dp[r][0] = dp[r - 1][0] + 1
 
-    for c in range(1, n):
-        Wejscie = [-1] * n
+    for col in range(1, n):
+        down = [-float("inf")] * n
+        up = [-float("inf")] * n
 
-        for r in range(n):
-            if L[r][c] != "#" and dp[r][c - 1] != -1:
-                Wejscie[r] = dp[r][c - 1] + 1
-
-        W_dol = [-1] * n
-        for r in range(n):
-            if L[r][c] == "#":
-                continue
-            W_dol[r] = Wejscie[r]
-
-            if r > 0 and W_dol[r - 1] != -1:
-                W_dol[r] = max(W_dol[r], W_dol[r - 1] + 1)
-
-        W_gore = [-1] * n
-        for r in range(n - 1, -1, -1):
-            if L[r][c] == "#":
+        for row in range(n):
+            if L[row][col] == "#":
                 continue
 
-            W_gore[r] = Wejscie[r]
+            from_left = dp[row][col - 1] + 1
 
-            if r < n - 1 and W_gore[r + 1] != -1:
-                W_gore[r] = max(W_gore[r], W_gore[r + 1] + 1)
+            from_top = down[row - 1] + 1 if row > 0 else -float("inf")
 
-        for r in range(n):
-            dp[r][c] = max(W_dol[r], W_gore[r])
+            down[row] = max(from_left, from_top)
 
-    return dp[n - 1][n - 1]
+        for row in range(n - 1, -1, -1):
+            if L[row][col] == "#":
+                continue
+
+            from_left = dp[row][col - 1] + 1
+
+            from_bottom = up[row + 1] + 1 if row < n - 1 else -float("inf")
+
+            up[row] = max(from_left, from_bottom)
+
+        for row in range(n):
+            dp[row][col] = max(down[row], up[row])
+
+    result = dp[n - 1][n - 1]
+
+    return result if result != -float("inf") else -1
 
 
 # zmien all_tests na True zeby uruchomic wszystkie testy
