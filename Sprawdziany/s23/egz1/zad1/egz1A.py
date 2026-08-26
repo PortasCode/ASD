@@ -2,50 +2,46 @@ from egz1Atesty import runtests
 from queue import PriorityQueue
 
 
-def gold(G: list[list[tuple[int, int]]], V: list[int], s: int, t: int, r: int):
+def dijkstra(G: list[list[tuple[int, int]]], start: int, is_robbed: bool, r: int = 0):
     n = len(G)
-    dist = [[float("inf") for _ in range(n + 1)] for _ in range(n)]
+    dist = [float("inf") for _ in range(n)]
 
     pq = PriorityQueue()
-
-    # koszt, wierzcholek, nie_ukradl / ukradl
-    pq.put((0, s, n))
-    dist[s][n] = 0
-    result = float("inf")
+    pq.put((0, start))
+    dist[start] = 0
 
     while not pq.empty():
-        cost, vert, id_zamku = pq.get()
+        cost, vert = pq.get()
 
-        if cost > dist[vert][id_zamku]:
+        if cost > dist[vert]:
             continue
 
-        if vert == t:
-            kwota_skradziona = V[id_zamku] if id_zamku != n else 0
-            if result > dist[vert][id_zamku] - kwota_skradziona:
-                result = dist[vert][id_zamku] - kwota_skradziona
-
-            if kwota_skradziona == 0:
-                if result > dist[vert][n] - V[vert]:
-                    result = dist[vert][n] - V[vert]
-
         for child, child_cost in G[vert]:
-            if id_zamku == n:
-                if dist[child][n] > dist[vert][n] + child_cost:
-                    dist[child][n] = dist[vert][n] + child_cost
-                    pq.put((dist[vert][n] + child_cost, child, n))
-
-                # moge teraz ukrasc to co jest w vert
-                if dist[child][vert] > dist[vert][n] + 2 * child_cost + r:
-                    dist[child][vert] = dist[vert][n] + 2 * child_cost + r
-                    pq.put((dist[vert][n] + 2 * child_cost + r, child, vert))
-
+            if is_robbed:
+                edge_cost = (child_cost * 2) + r
             else:
-                if dist[child][id_zamku] > dist[vert][id_zamku] + 2 * child_cost + r:
-                    dist[child][id_zamku] = dist[vert][id_zamku] + 2 * child_cost + r
-                    pq.put((dist[vert][id_zamku] + 2 * child_cost + r, child, id_zamku))
+                edge_cost = child_cost
+
+            total_cost = cost + edge_cost
+
+            if total_cost < dist[child]:
+                dist[child] = total_cost
+                pq.put((total_cost, child))
+
+    return dist
+
+
+def gold(G: list[list[tuple[int, int]]], V: list[int], s: int, t: int, r: int):
+    dystans_uczciwosc = dijkstra(G, s, is_robbed=False)
+
+    dystans_kradziez = dijkstra(G, t, is_robbed=True, r=r)
+
+    result = float("inf")
+    for idx, robbery in enumerate(V):
+        cost = dystans_uczciwosc[idx] + dystans_kradziez[idx] - robbery
+        result = min(result, cost)
 
     return result
 
 
-# zmien all_tests na True zeby uruchomic wszystkie testy
 runtests(gold, all_tests=True)

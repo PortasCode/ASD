@@ -1,44 +1,79 @@
-"""
-Mateusz Portka 432101
-
-Złożonośc algorytmu to jest niestety O(n^2)
-
-Algorytm działa w następujący sposób:
-1) Generuje tabliczke mnożenia dla wszystkich liczb w złożoności O(n^2)
-2) Wyszukuje k-ty element w tej tablicy w złożoności O(n) za pomocą algorytmu quick select
-"""
-
 from kol1_test import runtests
 
+"""
+Złożoność średnia O(nlog^2(n))
 
-def partition(A, p, r):
-    x = A[r]
-    i = p - 1
-    for j in range(p, r + 1):
-        if A[j] <= x:
-            i += 1
-            A[i], A[j] = A[j], A[i]
-    return i
-
-
-def find_kty(A, p, r, k):
-    if p <= r:
-        q = partition(A, p, r)
-        if q == k:
-            return A[q]
-        elif q < k:
-            return find_kty(A, q + 1, r, k)
-        else:
-            return find_kty(A, p, q - 1, k)
-
-
-def k_big(A, k):
-    T = []
+def k_big(A: list[int], k: int) -> int:
+    A.sort()
     n = len(A)
-    for i in range(n):
-        for j in range(n):
-            T.append(A[i] * A[j])
-    return find_kty(T, 0, len(T) - 1, len(T) - k)
+
+    left = 1
+    right = A[-1] * A[-1]
+
+    ans = 1
+
+    while left <= right:
+        mid = (left + right) // 2
+        licznik = 0
+
+        for i in range(n):
+            lewa = 0
+            prawa = n - 1
+            pierwszy_wiekszy = n
+
+            while lewa <= prawa:
+                srodek = (lewa + prawa) // 2
+
+                if A[i] * A[srodek] >= mid:
+                    pierwszy_wiekszy = srodek
+                    prawa = srodek - 1
+                else:
+                    lewa = srodek + 1
+
+            licznik += n - pierwszy_wiekszy
+
+        if licznik >= k:
+            ans = mid
+            left = mid + 1
+        else:
+            right = mid - 1
+
+    return ans
+"""
+
+"""
+Złożoność wzorcowa O(nlogn)
+"""
+
+
+def k_big(A: list[int], k: int) -> int:
+    A.sort()
+    n = len(A)
+
+    left = 1
+    right = A[-1] * A[-1]
+    ans = 1
+
+    while left <= right:
+        mid = (left + right) // 2
+        licznik = 0
+        lewa = 0
+        prawa = n - 1
+
+        while lewa < n and prawa >= 0:
+            if A[lewa] * A[prawa] < mid:
+                lewa += 1
+            else:
+                licznik += n - lewa
+                prawa -= 1
+
+        if licznik >= k:
+            ans = mid
+            left = mid + 1
+        else:
+            right = mid - 1
+
+    return ans
 
 
 # zmien all_tests na True zeby uruchomic wszystkie testy

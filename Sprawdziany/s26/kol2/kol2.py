@@ -1,70 +1,124 @@
 from kol2_test import runtests
 from queue import PriorityQueue
+from collections import deque
 
 """
-    Mateusz Portka 432101   O( mlog(m) )
-
-1) Znajduje największy wierzchołek w grafie aby móc stworzyć graf w reprezentacji listy sąsiedztwa   O(m)
-
-2) Buduje graf G przechodząc po wszystkich krawędziach  O(m)
-
-3) Tworzę zbiór poczty_set ponieważ sprawdzanie czy element należy do zbioru jest stałe a nie liniowe  O(1)
-
-4) Uruchamiam algorytm Dijkstry O(mlog(m)), zaczyjąc od wierzchołka startowego s. Tablica changed to jest dwuwymiarowa (typowo tablica dist) która zmienią swoją wartość zależnie od tego 
-jaka była poprzednia krawędź. Z racji tego, że korzystamy z kolejki pryriorytetowej to wiemy, że pierwsza wyspa na której jest poczta, to jest poprawny wynik danego przykładu.
-
-Złożoność obliczeniowa: O( m + m + mlog(m) ) -> O( mlog(m) )
-
-"""
-
+Złożoność podstawowa O(m^2)
 
 def change(mosty: list[tuple[int, int, str]], poczty: list[int], s: int):
+    return 0
+
+"""
+
+
+def zmien_czapke_na_int(czapka: str) -> int:
+    return int(czapka == "B")
+
+
+"""
+Złożoność średnia O(mlogm)
+
+
+def change(mosty: list[tuple[int, int, str]], poczty: list[int], s: int) -> int:
     n = 0
     for u, v, _ in mosty:
-        n = max(u, v, n)
+        n = max(n, u, v)
     n += 1
 
-    poczty_set = set(poczty)
-
     G = [[] for _ in range(n)]
-    for u, v, grupa in mosty:
-        if grupa == "F":
-            G[u].append((v, 0))
-            G[v].append((u, 0))
-        else:
-            G[u].append((v, 1))
-            G[v].append((u, 1))
 
+    for u, v, czapka in mosty:
+        typ = zmien_czapke_na_int(czapka)
+        G[u].append((v, typ))
+        G[v].append((u, typ))
+
+    zbior_poczty = set(poczty)
+
+    dist = [[float("inf"), float("inf")] for _ in range(n)]
     pq = PriorityQueue()
-
-    #                                       Frontasi , Bakusi
-    changed: list[list[int | float]] = [[float("inf"), float("inf")] for _ in range(n)]
-    changed[s] = [0, 0]
     pq.put((0, s, -1))
+    result = n + 1
 
     while not pq.empty():
-        liczba_zmian, vert, poprzednia_krawedz = pq.get()
+        liczba_zmian, vert, aktualna_czapka = pq.get()
 
-        if poprzednia_krawedz == -1:
-            for child, wladca_mostu in G[vert]:
-                changed[child][wladca_mostu] = 0
-                pq.put((0, child, wladca_mostu))
+        if vert in zbior_poczty:
+            result = liczba_zmian
+            break
 
-        if liczba_zmian > changed[vert][poprzednia_krawedz]:
+        if aktualna_czapka == -1:
+            for child, przyszla_czapka in G[vert]:
+                dist[child][przyszla_czapka] = 0
+                pq.put((0, child, przyszla_czapka))
+
+        if liczba_zmian > dist[vert][aktualna_czapka]:
             continue
 
-        if vert in poczty_set:
+        for child, przyszla_czapka in G[vert]:
+            if przyszla_czapka == aktualna_czapka:
+                if liczba_zmian < dist[child][aktualna_czapka]:
+                    dist[child][aktualna_czapka] = liczba_zmian
+                    pq.put((liczba_zmian, child, aktualna_czapka))
+
+            else:
+                if liczba_zmian + 1 < dist[child][przyszla_czapka]:
+                    dist[child][przyszla_czapka] = liczba_zmian + 1
+                    pq.put((liczba_zmian + 1, child, przyszla_czapka))
+
+    return result
+
+"""
+
+"""
+Złożoność wzorcowa O(m)
+"""
+
+
+def change(mosty: list[tuple[int, int, str]], poczty: list[int], s: int) -> int:
+    n = 0
+    for u, v, _ in mosty:
+        n = max(n, u, v)
+    n += 1
+
+    G = [[] for _ in range(n)]
+    for u, v, czapka in mosty:
+        typ = zmien_czapke_na_int(czapka)
+        G[u].append((v, typ))
+        G[v].append((u, typ))
+
+    zbior_poczty = set(poczty)
+
+    dist = [[float("inf"), float("inf")] for _ in range(n)]
+    Q = deque()
+
+    if s in zbior_poczty:
+        return 0
+
+    for child, typ_czapki in G[s]:
+        if dist[child][typ_czapki] == float("inf"):
+            dist[child][typ_czapki] = 0
+            Q.appendleft((0, child, typ_czapki))
+
+    while Q:
+        liczba_zmian, vert, aktualna_czapka = Q.popleft()
+
+        if liczba_zmian > dist[vert][aktualna_czapka]:
+            continue
+
+        if vert in zbior_poczty:
             return liczba_zmian
 
-        for child, aktualna_krawedz in G[vert]:
-            if aktualna_krawedz == poprzednia_krawedz:
-                if changed[child][aktualna_krawedz] > liczba_zmian:
-                    changed[child][aktualna_krawedz] = liczba_zmian
-                    pq.put((liczba_zmian, child, aktualna_krawedz))
-            else:
-                if changed[child][aktualna_krawedz] > liczba_zmian + 1:
-                    changed[child][aktualna_krawedz] = liczba_zmian + 1
-                    pq.put((liczba_zmian + 1, child, aktualna_krawedz))
+        for child, przyszla_czapka in G[vert]:
+            koszt_przejscia = 0 if przyszla_czapka == aktualna_czapka else 1
+            nowy_koszt = liczba_zmian + koszt_przejscia
+
+            if nowy_koszt < dist[child][przyszla_czapka]:
+                dist[child][przyszla_czapka] = nowy_koszt
+
+                if koszt_przejscia == 0:
+                    Q.appendleft((nowy_koszt, child, przyszla_czapka))
+                else:
+                    Q.append((nowy_koszt, child, przyszla_czapka))
 
     return -1
 

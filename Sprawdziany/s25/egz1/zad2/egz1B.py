@@ -1,99 +1,128 @@
 from egz1Btesty import runtests
 from math import inf as INF
-
+from collections import deque
 
 """
-Złożoność tego pomysłu to jest O( E(V+E) ), czyli dla każdej krawędzi odpalenie BFS lub DFS
+Złożonośc podstawowa O(E(V+E))
 
 
-def dfs_zadanie(V: int, E: list[tuple[int, int]], indeks: int) -> bool:
-    liczba_krawedzi = len(E)
+def bfs(G: list[list[int]], a: int, b: int) -> int:
+    n = len(G)
+    visited = [False] * n
+    Q = deque()
+    Q.append(a)
+    visited[a] = True
+
+    while Q:
+        u = Q.popleft()
+
+        for v in G[u]:
+            if u == a and v == b:
+                continue
+
+            if not visited[v]:
+                visited[v] = True
+                Q.append(v)
+
+    return int(not visited[b])
+
+
+def critical(V: int, E: list[tuple[int, int]]) -> int:
     G = [[] for _ in range(V)]
-    startowy_wierzcholek = -1
-    koncowy_wierzcholek = 0
-
-    for i in range(liczba_krawedzi):
-        if i == indeks:
-            startowy_wierzcholek = E[i][0]
-            koncowy_wierzcholek = E[i][1]
-            continue
-
-        u, v = E[i]
+    for u, v in E:
         G[u].append(v)
 
-    visited = [False for _ in range(V)]
-
-    def dfs_visit(G, u):
-        visited[u] = True
-        for v in G[u]:
-            if not visited[v]:
-                dfs_visit(G, v)
-
-    dfs_visit(G, startowy_wierzcholek)
-
-    return visited[koncowy_wierzcholek]
-
-
-def critical(V: int, E: list[tuple[int, int]]):
-    liczba_krawedzi = len(E)
     result = 0
-
-    for indeks in range(liczba_krawedzi):
-        if not dfs_zadanie(V, E, indeks):
-            result += 1
+    for u, v in E:
+        result += bfs(G, u, v)
 
     return result
 
 """
-
 """
-To zaadanie polega na zbudowaniu macierzy, wskazującej czy da się jakkolwiek przejść z wierzchołka A do B przez jakiś inny wierzchołek lub bezpośrednio
-( jest to algorytm Flloyda - Warshalla )
-
-nastepnie sprawdzam kazda krawedz i rozważam czy da się przejść z wierzchołka u do v ale nie przez krawędź u -> v
+ZŁożoność średnia O(V^3) 
 
 
-def critical_v2(V: int, E: list[tuple[int, int]]):
-    M = [[False for _ in range(V)] for _ in range(V)]
-
+def critical(V: int, E: list[tuple[int, int]]) -> int:
+    D = [[False for _ in range(V)] for _ in range(V)]
     for i in range(V):
-        M[i][i] = True
-
+        D[i][i] = True
     for u, v in E:
-        M[u][v] = True
+        D[u][v] = True
 
     for k in range(V):
         for i in range(V):
             for j in range(V):
-                M[i][j] = M[i][k] and M[k][j]
+                if D[i][k] and D[k][j]:
+                    D[i][j] = True
 
     result = 0
     for u, v in E:
-        visited = False
+        D[u][v] = False
 
         for k in range(V):
-            if k == u or k == v:
-                continue
-            if M[u][k] and M[k][v]:
-                visited = True
+            if D[u][k] and D[k][v]:
+                D[u][v] = True
                 break
 
-        if not visited:
+        if not D[u][v]:
+            D[u][v] = True
             result += 1
 
     return result
 
 """
 
+"""
+ZŁożoność wzorcowa O(EV + V^2)
+"""
 
-def critical_v3(V: int, E: list[tuple[int, int]]):
-    G: list[list[int]] = [[] for _ in range(V)]
+
+def bfs(G: list[list[int]], V: int) -> list[list[bool]]:
+    D = [[] for _ in range(V)]
+
+    for u in range(V):
+        Q = deque()
+        Q.append(u)
+        visited = [False] * V
+        visited[u] = True
+
+        while Q:
+            v = Q.popleft()
+
+            for vert in G[v]:
+                if not visited[vert]:
+                    Q.append(vert)
+                    visited[vert] = True
+
+        D[u] = visited
+
+    return D
+
+
+def critical(V: int, E: list[tuple[int, int]]) -> int:
+    G = [[] for _ in range(V)]
 
     for u, v in E:
         G[u].append(v)
 
-    T = [[] for _ in range(V)]
+    D = bfs(G, V)
+
+    result = 0
+    for u, v in E:
+        D[u][v] = False
+
+        for k in range(V):
+            if D[u][k] and D[k][v]:
+                D[u][v] = True
+                break
+
+        if not D[u][v]:
+            D[u][v] = True
+            result += 1
+
+    return result
 
 
 # zmien all_tests na True zeby uruchomic wszystkie testy
-runtests(critical_v2, all_tests=True)
+runtests(critical, all_tests=True)

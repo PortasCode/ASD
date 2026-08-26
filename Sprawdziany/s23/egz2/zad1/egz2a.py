@@ -1,132 +1,97 @@
 from egz2atesty import runtests
-import math
+
+"""
+Złożoność najgorsza O(n^2)
 
 
-class DrzewoPunktPrzedzial:
-    def __init__(self, tablica):
-        n = len(tablica)
-        if n == 0:
-            self.base = 0
-            self.drzewo = []
-            return
-
-        potega = math.ceil(math.log2(n)) if n > 1 else 0
-        self.base = 2**potega
-
-        self.drzewo = [0] * (2 * self.base)
-
-        for i in range(n):
-            self.drzewo[self.base + i] = tablica[i]
-
-        for i in range(self.base - 1, 0, -1):
-            self.drzewo[i] = self.drzewo[i * 2] + self.drzewo[i * 2 + 1]
-
-    def aktualizuj(self, indeks):
-        v = self.base + indeks
-        self.drzewo[v] += 1
-
-        v //= 2
-        while v > 0:
-            self.drzewo[v] = self.drzewo[v * 2] + self.drzewo[v * 2 + 1]
-            v //= 2
-
-    def suma_na_przedziale(self, poczatek, koniec):
-        a = self.base + poczatek
-        b = self.base + koniec
-
-        if a == b:
-            return self.drzewo[a]
-
-        wynik = 0
-
-        a -= 1
-        b += 1
-
-        while b - a > 1:
-            if a % 2 == 0:
-                wynik += self.drzewo[a + 1]
-
-            if b % 2 == 1:
-                wynik += self.drzewo[b - 1]
-
-            a //= 2
-            b //= 2
-
-        return wynik
-
-
-def dominance_nlogn(P: list[tuple[int, int]]):
+def dominance(P: list[tuple[int, int]]) -> int:
     n = len(P)
-    P.sort(key=lambda x: (x[0], -x[1]))
-    dane_y = [0] * (n + 1)
-
-    drzewo = DrzewoPunktPrzedzial(dane_y)
-
     result = 0
+
     for i in range(n):
-        if i == 0:
-            drzewo.aktualizuj(P[i][1])
+        x, y = P[i]
+        points = 0
+        for j in range(n):
+            if i == j:
+                continue
+
+            if x > P[j][0] and y > P[j][1]:
+                points += 1
+
+        if points > result:
+            result = points
+
+    return result
+
+"""
+"""
+Złożoność średnia O(nlogn)
+
+
+def dominance(P: list[tuple[int, int]]) -> int:
+    n = len(P)
+    P.sort(key=lambda x: (x[1], x[0]))
+
+    points = 0
+    x, y = P[-1]
+
+    for i in range(n - 2, -1, -1):
+        if x > P[i][0] and y > P[i][1]:
+            points += 1
+
+    return points
+
+
+"""
+"""
+Złożoność wzorcowa O(n)
+"""
+
+
+def dominance(P: list[tuple[int, int]]) -> int:
+    n = len(P)
+    if n == 0:
+        return 0
+
+    T = [0] * (n + 2)
+    buckets = [[] for _ in range(n + 1)]
+
+    for x, y in P:
+        T[y] += 1
+        buckets[x].append(y)
+
+    for i in range(n, 0, -1):
+        T[i] += T[i + 1]
+
+    najwieksze_y = 0
+    przetworzone_punkty = 0
+    result = 0
+
+    for x in range(n, 0, -1):
+        col = buckets[x]
+        if not col:
             continue
 
-        liczba = drzewo.suma_na_przedziale(0, P[i][1] - 1)
-        if liczba > result:
-            result = liczba
+        current_najwiekszy = max(col)
 
-        drzewo.aktualizuj(P[i][1])
+        if current_najwiekszy > najwieksze_y:
+            k = col.count(current_najwiekszy)
+
+            punkty_po_lewej = n - (przetworzone_punkty + len(col))
+
+            za_wysokie_po_lewej = T[current_najwiekszy] - k
+
+            zdominowane = punkty_po_lewej - za_wysokie_po_lewej
+
+            if zdominowane > result:
+                result = zdominowane
+
+            najwieksze_y = current_najwiekszy
+
+        przetworzone_punkty += len(col)
 
     return result
 
 
-def dominance_n(P: list[tuple[int, int]]):
-    n = len(P)
-    pogrupowane_punkty = [[] for _ in range(n + 1)]
-
-    for krotka in P:
-        pogrupowane_punkty[krotka[0]].append(krotka)
-
-    L = [0 for _ in range(n + 1)]
-    T = [0 for _ in range(n + 1)]
-
-    for i in range(1, n + 1):
-        L[i] = L[i - 1] + len(pogrupowane_punkty[i - 1])
-
-    zliczenia_y = [0 for _ in range(n + 1)]
-    for x, y in P:
-        zliczenia_y[y] += 1
-
-    T = [0 for _ in range(n + 1)]
-    T[n] = zliczenia_y[n]
-
-    for i in range(n - 1, -1, -1):
-        T[i] = T[i + 1] + zliczenia_y[i]
-
-    najlepszy_wynik = 0
-    najwiekszy_y_po_prawej = 0
-
-    for x in range(n, -1, -1):
-        if not pogrupowane_punkty[x]:
-            continue
-
-        current_max_y = -1
-        liczba_kopii = 0
-
-        for _, y in pogrupowane_punkty[x]:
-            if y > current_max_y:
-                current_max_y = y
-                liczba_kopii = 1
-            elif y == current_max_y:
-                liczba_kopii += 1
-
-        if current_max_y > najwiekszy_y_po_prawej:
-            najwiekszy_y_po_prawej = current_max_y
-
-            force = L[x] - T[current_max_y] + liczba_kopii
-
-            if force > najlepszy_wynik:
-                najlepszy_wynik = force
-
-    return najlepszy_wynik
-
-
 # zmien all_tests na True zeby uruchomic wszystkie testy
-runtests(dominance_n, all_tests=True)
+runtests(dominance, all_tests=True)

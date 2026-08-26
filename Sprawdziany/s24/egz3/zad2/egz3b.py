@@ -1,90 +1,116 @@
 from egz3btesty import runtests
 
+"""
+Złożoność podstawowa O(n^2)
 
-def kunlucky(T, k):
+
+def kunlucky_(T:list[int], k:int):
     n = len(T)
-    najwieksza_liczba = max(T)
 
-    current = k
-    pechowe_liczby = [current]
-    licznik = 1
-    while current <= najwieksza_liczba:
-        current = current + (current % licznik) + 7
-        pechowe_liczby.append(current)
-        licznik += 1
+    unlucky_nums = set()
+    x = k
+    i = 1
+    while x <= n:
+        unlucky_nums.add(x)
+        x = x + (x % i) + 7
+        i += 1
 
-    pechowe_liczby = set(pechowe_liczby)
+    max_len = 0
 
-    poczatek = 0
-    koniec = 1
-    result = 0
-    counter = 0 if T[0] not in pechowe_liczby else 1
+    for left in range(n):
+        unlucky_count = 0
+        for right in range(left, n):
+            if T[right] in unlucky_nums:
+                unlucky_count += 1
 
-    while koniec < n:
-        if counter <= 2:
-            dlugosc = koniec - poczatek
-            result = max(result, dlugosc)
+            if unlucky_count > 2:
+                break
 
-            if T[koniec] in pechowe_liczby:
-                counter += 1
-            koniec += 1
-        else:
-            if T[poczatek] in pechowe_liczby:
-                counter -= 1
-            poczatek += 1
+            max_len = max(max_len, right - left + 1)
 
-    if counter <= 2:
-        result = max(result, koniec - poczatek)
+    return max_len
 
-    return result
+"""
+"""
+Złożoność średnia O(nlogn)
+"""
 
 
-def kunlucky_nlogn(T, k):
+def kunlucky(T: list[int], k: int):
     n = len(T)
-    najwieksza_liczba = max(T)
 
-    current = k
-    pechowe_liczby = [current]
-    licznik = 1
+    unlucky_nums = set()
+    x = k
+    i = 1
+    while x <= n:
+        unlucky_nums.add(x)
+        x = x + (x % i) + 7
+        i += 1
 
-    while current <= najwieksza_liczba:
-        current = current + (current % licznik) + 7
-        pechowe_liczby.append(current)
-        licznik += 1
+    prefiks = [0 for _ in range(n)]
+    if T[0] in unlucky_nums:
+        prefiks[0] = 1
 
-    pechowe_liczby = set(pechowe_liczby)
-
-    Sumy_prefiksowe = [0 for _ in range(n + 1)]
-
-    for i in range(n):
-        Sumy_prefiksowe[i + 1] = Sumy_prefiksowe[i]
-
-        if T[i] in pechowe_liczby:
-            Sumy_prefiksowe[i + 1] += 1
+    for i in range(1, n):
+        prefiks[i] = prefiks[i - 1]
+        if T[i] in unlucky_nums:
+            prefiks[i] += 1
 
     result = 0
 
-    for poczatek in range(n):
-        left = poczatek
-        right = n - 1
-        best_koniec = left
+    for right in range(n):
+        bs_left = 0
+        bs_right = right
 
-        while left <= right:
-            mid = (left + right) // 2
-            licznik_pecha = Sumy_prefiksowe[mid + 1] - Sumy_prefiksowe[poczatek]
+        while bs_left <= bs_right:
+            mid = (bs_left + bs_right) // 2
 
-            if licznik_pecha <= 2:
-                best_koniec = mid
-                left = mid + 1
+            pechowe_przedzial = (
+                prefiks[right] if mid == 0 else prefiks[right] - prefiks[mid - 1]
+            )
+
+            if pechowe_przedzial > 2:
+                bs_left = mid + 1
             else:
-                right = mid - 1
+                result = max(result, right - mid + 1)
 
-        dlugosc = best_koniec - poczatek + 1
-        if dlugosc > result:
-            result = dlugosc
+                bs_right = mid - 1
 
     return result
 
+
+"""
+Złożoność wzorcowa O(n)
+
+
+def kunlucky(T: list[int], k: int):
+    n = len(T)
+    unlucky_nums = set()
+    x = k
+    i = 1
+    while x <= n:
+        unlucky_nums.add(x)
+        x = x + (x % i) + 7
+        i += 1
+
+    result = 0
+    left = 0
+    count = 0
+
+    for right in range(n):
+        if T[right] in unlucky_nums:
+            count += 1
+
+        while count > 2:
+            if T[left] in unlucky_nums:
+                count -= 1
+            left += 1
+
+        result = max(result, right - left + 1)
+
+    return result
+
+"""
 
 # zmien all_tests na True zeby uruchomic wszystkie testy
-runtests(kunlucky_nlogn, all_tests=True)
+runtests(kunlucky, all_tests=True)

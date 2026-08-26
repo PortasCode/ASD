@@ -1,71 +1,87 @@
-"""
-Mateusz Portka 432101
-
-
-Mialem pomysł, ale niestety chyba nie wyszedł
-
-Plan był taki, żeby dla każdego testu sprawdzać czy mozna go gdzies bezkolizyjne ustalic
-
-    * jeżeli tak to do następnego
-
-    * jeżeli nie to chce wstawić do tej sali gdzie w tym przedziale wartosc studentow mozliwych jest mniejsza
-    i sprawdzac czy jezeli najwieksza dotychczasowa wartosc jest wieksza niz to co mozemy osiagnac to zostawiamy a jezeli
-    terazniejsza opcja jest lepsza to nadpisujemy
-
-"""
-
 from zadSiEtesty import runtests
+
+"""
+Złożoność akceptowalna O(NT^2)
 
 
 def sale_i_egzaminy(E: list[tuple[int, int, int]]):
     n = len(E)
-    E.sort(key=lambda x: (x[1], x[0], -x[2]))
+    if n == 0:
+        return 0
+
     maksymalny_czas = E[-1][1]
 
-    studenci_138 = [0] * (maksymalny_czas + 1)
-    studenci_241 = [0] * (maksymalny_czas + 1)
+    dp = [
+        [
+            [-float("inf") for _ in range(maksymalny_czas + 1)]
+            for _ in range(maksymalny_czas + 1)
+        ]
+        for _ in range(n + 1)
+    ]
+    dp[0][0][0] = 0
 
     for i in range(n):
+        idx = i + 1
         start, koniec, liczba_studentow = E[i]
 
-        # sala 1.38 jest dostepna w tym terminie
-        if sum(studenci_138[start : koniec + 1]) == 0:
-            for i in range(start, koniec + 1):
-                studenci_138[i] = liczba_studentow
+        for t1 in range(maksymalny_czas + 1):
+            for t2 in range(maksymalny_czas + 1):
+                if dp[idx - 1][t1][t2] == -float("inf"):
+                    continue
 
-        # sala 2.41 jest dostepna w tym terminie
-        elif sum(studenci_241[start : koniec + 1]) == 0:
-            for i in range(start, koniec + 1):
-                studenci_241[i] = liczba_studentow
+                dp[idx][t1][t2] = max(dp[idx][t1][t2], dp[idx - 1][t1][t2])
+                if t1 < start:
+                    dp[idx][koniec][t2] = max(
+                        dp[idx][koniec][t2], dp[idx - 1][t1][t2] + liczba_studentow
+                    )
 
-        najwieksza_138 = -1
-        najwieksza_241 = -1
+                if t2 < start:
+                    dp[idx][t1][koniec] = max(
+                        dp[idx][t1][koniec], dp[idx - 1][t1][t2] + liczba_studentow
+                    )
 
-        for i in range(start, koniec + 1):
-            najwieksza_138 = max(najwieksza_138, studenci_138[i])
-            najwieksza_241 = max(najwieksza_241, studenci_241[i])
+    result = 0
+    for t1 in range(maksymalny_czas + 1):
+        for t2 in range(maksymalny_czas + 1):
+            if dp[n][t1][t2] > result:
+                result = dp[n][t1][t2]
 
-        for i in range(start, koniec + 1):
-            studenci_138[i] = najwieksza_138
-            studenci_241[i] = najwieksza_241
+    return result
+"""
 
-        if najwieksza_138 > najwieksza_241:
-            # bardziej oplaca sie cos podmienic w tablicy 241
-            ewentualna_opcja = studenci_241[start - 1] + liczba_studentow
-            if ewentualna_opcja > najwieksza_241:
-                for i in range(start, koniec + 1):
-                    studenci_241[i] = ewentualna_opcja
-        else:
-            ewentualna_opcja = studenci_138[start - 1] + liczba_studentow
-            if ewentualna_opcja > najwieksza_138:
-                for i in range(start, koniec + 1):
-                    studenci_138[i] = ewentualna_opcja
-
-        print(studenci_138)
-        print(studenci_241)
-        print()
-
-    return studenci_241[maksymalny_czas] + studenci_138[maksymalny_czas]
+"""
+Złożoność wzorcowa O(N^3)
+"""
 
 
-runtests(sale_i_egzaminy, all_tests=False)
+def sale_i_egzaminy(E: list[tuple[int, int, int]]):
+    n = len(E)
+    if n == 0:
+        return 0
+
+    E = [(0, 0, 0)] + E
+
+    dp = [[-1 for _ in range(n + 1)] for _ in range(n + 1)]
+    dp[0][0] = 0
+
+    for i in range(1, n + 1):
+        for j in range(i):
+            for k in range(i):
+                if dp[k][j] != -1:
+                    if E[k][1] < E[i][0]:
+                        dp[i][j] = max(dp[i][j], dp[k][j] + E[i][2])
+                if dp[j][k] != -1:
+                    if E[k][1] < E[i][0]:
+                        dp[j][i] = max(dp[j][i], dp[j][k] + E[i][2])
+
+    result = -1
+
+    for i in range(n + 1):
+        for j in range(n + 1):
+            if result < dp[i][j]:
+                result = dp[i][j]
+
+    return result
+
+
+runtests(sale_i_egzaminy, all_tests=True)

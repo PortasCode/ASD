@@ -2,25 +2,92 @@ from egz2Btesty import runtests
 from math import inf as INF
 from collections import deque
 
+"""
+Złożoność podstawowa O(n^2) 
 
-def bitgame(T):
+
+def bitgame(T: list[int]):
+    result = []
+    for liczba in T:
+        changed = False
+
+        for i in range(len(result)):
+            if result[i] <= liczba:
+                changed = True
+                result[i] = INF
+
+        if not changed:
+            result.append(liczba)
+
+    licznik = 0
+    for liczba in result:
+        if liczba != INF:
+            licznik += 1
+
+    return licznik
+
+"""
+
+"""
+Złożoność średnia O(n * logn)
+"""
+
+
+def bin_search(T: list[int], number: int) -> int:
     n = len(T)
-    Q = deque()
+    left = 0
+    right = n - 1
+    wynik = n
 
-    for i in range(n):
-        if len(Q) == 0:
-            Q.append(T[i])
+    while left <= right:
+        mid = (left + right) // 2
+        if T[mid] > number:
+            left = mid + 1
+        else:
+            wynik = mid
+            right = mid - 1
+
+    return wynik
+
+
+def bitgame(T: list[int]):
+    Q = []
+
+    for liczba in T:
+        if not Q:
+            Q.append(liczba)
             continue
 
-        removed = False
-        while len(Q) > 0 and Q[-1] <= T[i]:
-            removed = True
-            Q.pop()
+        indeks = bin_search(Q, liczba)
 
-        if not removed:
-            Q.append(T[i])
+        if indeks == len(Q):
+            Q.append(liczba)
+        else:
+            del Q[indeks:]
 
     return len(Q)
+
+
+"""
+Złożoność wzorcowa O(n)
+
+def bitgame(T: list[int]) -> int:
+    Q = deque()
+
+    for liczba in T:
+        if not Q:
+            Q.append(liczba)
+        else:
+            changed = False
+            while Q[-1] <= liczba:
+                changed = True
+                Q.pop()
+
+            if not changed:
+                Q.append(liczba)
+
+    return len(Q)
+"""
 
 
 # zmien all_tests na True zeby uruchomic wszystkie testy

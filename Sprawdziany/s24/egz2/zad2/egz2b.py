@@ -1,68 +1,176 @@
 from egz2btesty import runtests
+from queue import PriorityQueue
 from collections import deque
 
 
-def tory_amos(E, A, B):
+"""
+Złożoność średnia O(mlogm)
+def tory_amos(E: list[tuple[int, int, int, str]], A: int, B: int):
     n = 0
     for u, v, _, _ in E:
         n = max(n, u, v)
-
     n += 1
+
     G = [[] for _ in range(n)]
+    for u, v, d, t in E:
+        nt = t == "I"
+        G[u].append((v, d, nt))
+        G[v].append((u, d, nt))
 
-    #           I             P
+    pq = PriorityQueue()
     dist = [[float("inf"), float("inf")] for _ in range(n)]
+    dist[A] = [0, 0]
 
-    for u, v, cost, tp in E:
-        G[u].append((v, cost, tp))
-        G[v].append((u, cost, tp))
+    for v, d, t in G[A]:
+        pq.put((d, v, t))
+
+    while not pq.empty():
+        cost, vert, rail = pq.get()
+
+        if cost > dist[vert][rail]:
+            continue
+
+        if vert == B:
+            return cost
+
+        for child, child_cost, child_rail in G[vert]:
+            total_cost = cost + child_cost
+            if child_rail == rail:
+                if rail == 0:
+                    total_cost += 10
+                else:
+                    total_cost += 5
+            else:
+                total_cost += 20
+
+            if total_cost < dist[child][child_rail]:
+                dist[child][child_rail] = total_cost
+                pq.put((total_cost, child, child_rail))
+
+    return -1
+"""
+
+"""
+Złożoność wzorcowa O(m)
+
+
+def tory_amos(E: list[tuple[int, int, int, str]], A: int, B: int):
+    n = 0
+    for u, v, _, _ in E:
+        n = max(n, u, v)
+    n += 1
+
+    G = [[] for _ in range(n)]
+    for u, v, d, t in E:
+        nt = t == "I"
+        G[u].append((v, d, nt))
+        G[v].append((u, d, nt))
 
     Q = deque()
-    Q.append((A, 0, 0, ""))
+    dist = [[float("inf"), float("inf")] for _ in range(n)]
+    dist[A] = [0, 0]
+
+    for v, d, t in G[A]:
+        Q.append((d, v, t))
 
     while Q:
-        vert, delay, total_cost, tp = Q.popleft()
+        cost, vert, rail = Q.popleft()
 
-        if tp == "":
-            for child, child_cost, child_tp in G[vert]:
-                Q.append((child, child_cost - 1, child_cost, child_tp))
+        if cost > dist[vert][rail]:
             continue
-
-        if tp == "I":
-            pomocnicza = 0
-        else:
-            pomocnicza = 1
-
-        if delay > 0:
-            if dist[vert][pomocnicza] > total_cost:
-                Q.append((vert, delay - 1, total_cost, tp))
-            continue
-
-        if total_cost >= dist[vert][pomocnicza]:
-            continue
-
-        dist[vert][pomocnicza] = total_cost
 
         if vert == B:
-            return total_cost
+            continue
 
-        if vert == B:
-            return total_cost
-
-        for child, child_cost, child_tp in G[vert]:
-            if child_tp == tp:
-                if tp == "I":
-                    kara = 5
-                else:  # tp == 'P'
-                    kara = 10
+        for child, child_cost, child_rail in G[vert]:
+            total_cost = cost + child_cost
+            if child_rail == rail:
+                if rail == 0:
+                    total_cost += 10
+                else:
+                    total_cost += 5
+                if total_cost < dist[child][child_rail]:
+                    dist[child][child_rail] = total_cost
+                    Q.appendleft((total_cost, child, child_rail))
             else:
-                kara = 20
+                total_cost += 20
+                if total_cost < dist[child][child_rail]:
+                    dist[child][child_rail] = total_cost
+                    Q.append((total_cost, child, child_rail))
 
-            Q.append(
-                (child, child_cost + kara - 1, total_cost + child_cost + kara, child_tp)
-            )
+    return min(dist[B])
 
-    return None
+"""
+"""
+Algorytm Diala O(m)
+"""
+
+
+def tory_amos(E: list[tuple[int, int, int, str]], A: int, B: int):
+    if A == B:
+        return 0
+
+    n = 0
+    for u, v, _, _ in E:
+        n = max(n, u, v)
+    n += 1
+
+    G = [[] for _ in range(n)]
+    for u, v, d, t in E:
+        nt = 1 if t == "I" else 0
+        G[u].append((v, d, nt))
+        G[v].append((u, d, nt))
+
+    K = 31
+    buckets = [[] for _ in range(K)]
+    elements_in_buckets = 0
+
+    dist = [[float("inf"), float("inf")] for _ in range(n)]
+    dist[A] = [0, 0]
+
+    for v, d, t in G[A]:
+        if d < dist[v][t]:
+            dist[v][t] = d
+            buckets[d % K].append((d, v, t))
+            elements_in_buckets += 1
+
+    curr_cost = 0
+
+    while elements_in_buckets > 0:
+        bucket_idx = curr_cost % K
+
+        while not buckets[bucket_idx]:
+            curr_cost += 1
+            bucket_idx = curr_cost % K
+
+        while buckets[bucket_idx]:
+            cost, vert, rail = buckets[bucket_idx].pop()
+            elements_in_buckets -= 1
+
+            if cost > dist[vert][rail]:
+                continue
+
+            if vert == B:
+                continue
+
+            for child, child_cost, child_rail in G[vert]:
+                total_cost = cost + child_cost
+
+                if child_rail == rail:
+                    if rail == 0:
+                        total_cost += 10
+                    else:
+                        total_cost += 5
+                else:
+                    total_cost += 20
+
+                if total_cost < dist[child][child_rail]:
+                    dist[child][child_rail] = total_cost
+                    buckets[total_cost % K].append((total_cost, child, child_rail))
+                    elements_in_buckets += 1
+
+    ans = min(dist[B])
+    return ans if ans != float("inf") else -1
 
 
 runtests(tory_amos, all_tests=True)

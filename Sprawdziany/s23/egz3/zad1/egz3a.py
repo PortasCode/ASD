@@ -1,49 +1,50 @@
 from egz3atesty import runtests
 from queue import PriorityQueue
 
+"""
+Złożoność wzorcowa O(n^2)
+"""
+
 
 def goodknight(G: list[list[int]], s: int, t: int):
     n = len(G)
-    T: list[list[tuple[int, int]]] = [[] for _ in range(n)]
+    dist = [[float("inf") for _ in range(17)] for _ in range(n)]
+    dist[s][0] = 0
+    pq = PriorityQueue()
 
     for i in range(n):
-        for j in range(n):
-            if i == j:
-                continue
-
-            if G[i][j] != -1:
-                T[i].append((j, G[i][j]))
-
-    dist = [[float("inf") for _ in range(17)] for _ in range(n)]
-    pq = PriorityQueue()
-    pq.put((0, s, 16))
+        if G[s][i] != -1:
+            pq.put((G[s][i], G[s][i], i))
+            dist[i][G[s][i]] = G[s][i]
 
     while not pq.empty():
-        cost, vert, power = pq.get()
+        cost, hours, vert = pq.get()
 
-        if cost > dist[vert][power]:
+        if dist[vert][hours] < cost:
             continue
 
         if vert == t:
             return cost
 
-        # zawsze moze sie przespac w zamku
-        if power < 16:
-            if dist[vert][16] > cost + 8:
-                dist[vert][16] = cost + 8
-                pq.put((cost + 8, vert, 16))
+        for child in range(n):
+            if G[vert][child] != -1:
+                child_cost = G[vert][child]
 
-        for child, child_cost in T[vert]:
-            remain_power = power - child_cost
+                # nie da się dojechać bez odpoczunku
+                if hours + child_cost > 16:
+                    if dist[child][child_cost] > cost + 8 + child_cost:
+                        pq.put((cost + 8 + child_cost, child_cost, child))
+                        dist[child][child_cost] = cost + 8 + child_cost
+                else:
+                    if dist[child][child_cost + hours] > cost + child_cost:
+                        dist[child][hours + child_cost] = cost + child_cost
+                        pq.put((cost + child_cost, hours + child_cost, child))
 
-            if remain_power < 0:
-                continue
+                    if dist[child][child_cost] > cost + 8 + child_cost:
+                        dist[child][child_cost] = cost + 8 + child_cost
+                        pq.put((cost + 8 + child_cost, child_cost, child))
 
-            if dist[child][remain_power] > cost + child_cost:
-                dist[child][remain_power] = cost + child_cost
-                pq.put((cost + child_cost, child, remain_power))
-
-    return
+    return -1
 
 
 # zmien all_tests na True zeby uruchomic wszystkie testy
